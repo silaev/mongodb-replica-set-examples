@@ -1,5 +1,5 @@
 # Examples for [mongodb-replica-set](https://github.com/silaev/mongodb-replica-set)    
-![build](https://github.com/silaev/mongodb-replica-set-examples/workflows/build/badge.svg?branch=master)
+![build](https://github.com/silaev/mongodb-replica-set-examples/workflows/build/badge.svg?branch=main)
 
 #### Prerequisite
 - Java 8+
