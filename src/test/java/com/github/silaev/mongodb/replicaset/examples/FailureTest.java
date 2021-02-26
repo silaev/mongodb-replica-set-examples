@@ -13,6 +13,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.Arrays;
 
 import static com.github.silaev.mongodb.replicaset.model.ReplicaSetMemberState.DOWN;
 import static com.github.silaev.mongodb.replicaset.model.ReplicaSetMemberState.PRIMARY;
@@ -33,6 +34,7 @@ class FailureTest {
         .useHostDockerInternal(true)
         .addToxiproxy(true)
         .replicaSetNumber(3)
+        .commandLineOptions(Arrays.asList("--oplogSize", "50"))
         .build()
     ) {
       mongoReplicaSet.start();
