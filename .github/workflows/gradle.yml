@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [ main,feature/add_test_cases ]
+    branches: [ main,feature/command_line_opt ]
   pull_request: {}
 
 jobs:
