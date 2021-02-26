@@ -37,8 +37,9 @@ class FailureTest {
     ) {
       mongoReplicaSet.start();
       final String replicaSetUrl = mongoReplicaSet.getReplicaSetUrl();
-      assertThat(mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers()))
-        .containsExactlyInAnyOrder(PRIMARY, SECONDARY, SECONDARY);
+      assertThat(
+        mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers())
+      ).containsExactlyInAnyOrder(PRIMARY, SECONDARY, SECONDARY);
       try (
         final MongoClient mongoSyncClient = MongoClients.create(
           MongoDBConnectionUtils.getMongoClientSettingsWithTimeout(
@@ -57,13 +58,15 @@ class FailureTest {
         mongoReplicaSet.waitForMasterReelection(masterNodeBeforeFailure1);
 
         // TODO: Insert data, make assertions here
-        assertThat(mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers()))
-          .containsExactlyInAnyOrder(PRIMARY, SECONDARY, DOWN);
+        assertThat(
+          mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers())
+        ).containsExactlyInAnyOrder(PRIMARY, SECONDARY, DOWN);
         insertDoc("after failure 1", collection);
 
         // WHEN: Becoming read only
-        final MongoNode masterNodeBeforeFailure2 =
-          mongoReplicaSet.getMasterMongoNode(mongoReplicaSet.getMongoRsStatus().getMembers());
+        final MongoNode masterNodeBeforeFailure2 = mongoReplicaSet.getMasterMongoNode(
+          mongoReplicaSet.getMongoRsStatus().getMembers()
+        );
         mongoReplicaSet.disconnectNodeFromNetwork(masterNodeBeforeFailure2);
         mongoReplicaSet.waitForMongoNodesDown(2);
         // THEN
@@ -71,8 +74,9 @@ class FailureTest {
         assertThatThrownBy(() -> insertDocExceptionally("after failure 2", collection)
         ).isInstanceOf(MongoException.class);
 
-        assertThat(mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers()))
-          .containsExactlyInAnyOrder(SECONDARY, DOWN, DOWN);
+        assertThat(
+          mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers())
+        ).containsExactlyInAnyOrder(SECONDARY, DOWN, DOWN);
 
         // WHEN: Bring all the disconnected nodes back
         mongoReplicaSet.connectNodeToNetwork(masterNodeBeforeFailure1);
@@ -82,8 +86,9 @@ class FailureTest {
         // THEN
         // TODO: Make some assertions here
         assertThat(collection.countDocuments()).isBetween(2L, 3L);
-        assertThat(mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers()))
-          .containsExactlyInAnyOrder(PRIMARY, SECONDARY, SECONDARY);
+        assertThat(
+          mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers())
+        ).containsExactlyInAnyOrder(PRIMARY, SECONDARY, SECONDARY);
       }
     }
   }
