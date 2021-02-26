@@ -1,4 +1,4 @@
-# Examples for [mongodb-replica-set](https://github.com/silaev/mongodb-replica-set)    
+# The example for article [Run MongoDB Atlas locally for testing](https://dev.to/silaev/run-mongodb-atlas-locally-for-testing-1mp9)    
 ![build](https://github.com/silaev/mongodb-replica-set-examples/workflows/build/badge.svg?branch=main)
 
 #### Prerequisite
