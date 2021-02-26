@@ -7,7 +7,6 @@ version '1.0-SNAPSHOT'
 
 repositories {
   mavenCentral()
-  maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -16,7 +15,7 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.19.0")
-  testCompile("com.github.silaev:mongodb-replica-set:3212925")
+  testCompile("com.github.silaev:mongodb-replica-set:0.4.3")
   testImplementation("org.mongodb:mongodb-driver-sync:4.2.1")
 }
 
