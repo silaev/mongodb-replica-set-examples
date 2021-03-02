@@ -2,9 +2,10 @@ package com.github.silaev.mongodb.replicaset.examples;
 
 import com.github.silaev.mongodb.replicaset.MongoDbReplicaSet;
 import com.github.silaev.mongodb.replicaset.examples.util.MongoDBConnectionUtils;
+import com.github.silaev.mongodb.replicaset.examples.util.WaitUtils;
 import com.github.silaev.mongodb.replicaset.model.MongoNode;
 import com.mongodb.MongoException;
-import com.mongodb.MongoSocketReadTimeoutException;
+import com.mongodb.ReadConcern;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -12,6 +13,7 @@ import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 
@@ -45,11 +47,10 @@ class FailureTest {
       try (
         final MongoClient mongoSyncClient = MongoClients.create(
           MongoDBConnectionUtils.getMongoClientSettingsWithTimeout(
-            replicaSetUrl, WriteConcern.MAJORITY, 5
+            replicaSetUrl, WriteConcern.MAJORITY.withJournal(true), ReadConcern.MAJORITY, 5
           )
         )
       ) {
-        // TODO: Insert data, make assertions here
         final MongoCollection<Document> collection = getCollection(mongoSyncClient);
         insertDoc("before failure 1", collection);
         final MongoNode masterNodeBeforeFailure1 =
@@ -58,8 +59,6 @@ class FailureTest {
         // WHEN: Fault tolerance
         mongoReplicaSet.disconnectNodeFromNetwork(masterNodeBeforeFailure1);
         mongoReplicaSet.waitForMasterReelection(masterNodeBeforeFailure1);
-
-        // TODO: Insert data, make assertions here
         assertThat(
           mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers())
         ).containsExactlyInAnyOrder(PRIMARY, SECONDARY, DOWN);
@@ -72,10 +71,9 @@ class FailureTest {
         mongoReplicaSet.disconnectNodeFromNetwork(masterNodeBeforeFailure2);
         mongoReplicaSet.waitForMongoNodesDown(2);
         // THEN
-        // TODO: Make assertions here
-        assertThatThrownBy(() -> insertDocExceptionally("after failure 2", collection)
+        assertThatThrownBy(
+          () -> insertDocExceptionally("after failure 2", collection)
         ).isInstanceOf(MongoException.class);
-
         assertThat(
           mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers())
         ).containsExactlyInAnyOrder(SECONDARY, DOWN, DOWN);
@@ -86,11 +84,20 @@ class FailureTest {
         mongoReplicaSet.waitForAllMongoNodesUp();
         mongoReplicaSet.waitForMaster();
         // THEN
-        // TODO: Make some assertions here
-        assertThat(collection.countDocuments()).isBetween(2L, 3L);
         assertThat(
           mongoReplicaSet.nodeStates(mongoReplicaSet.getMongoRsStatus().getMembers())
         ).containsExactlyInAnyOrder(PRIMARY, SECONDARY, SECONDARY);
+        long totalDocs = WaitUtils.pollUntilExpectedOrLatestValue(
+          collection::countDocuments,
+          3L,
+          Duration.ofSeconds(10),
+          4
+        );
+        LOGGER.debug("totalDocs: {}", totalDocs);
+        assertThat(totalDocs).satisfiesAnyOf(
+          v -> assertThat(v).isEqualTo(2L),
+          v -> assertThat(v).isEqualTo(3L)
+        );
       }
     }
   }
@@ -104,14 +111,15 @@ class FailureTest {
   private void insertDoc(final String key, final MongoCollection<Document> collection) {
     try {
       insertDocExceptionally(key, collection);
-    } catch (MongoSocketReadTimeoutException e) {
-      LOGGER.debug("Key: {}, exception: {}", key, e.getMessage());
+    } catch (MongoException e) {
+      LOGGER.debug("Failed to insert a doc with a key: {}, exception: {}", key, e.getMessage());
     }
   }
 
-  private void insertDocExceptionally(final String key, final MongoCollection<Document> collection) {
-    collection.withWriteConcern(WriteConcern.MAJORITY).insertOne(
-      new Document(key, Instant.now())
-    );
+  private void insertDocExceptionally(
+    final String key,
+    final MongoCollection<Document> collection
+  ) {
+    collection.insertOne(new Document(key, Instant.now()));
   }
 }
